@@ -36,7 +36,7 @@ class DynmapConfiguration:
             print(zoom_levels)
 
             tile_matrices = []
-            for i in range(zoom_levels):
+            for i in range(zoom_levels + 1):
                 tile_matrix = {}
                 tile_matrix["ows:Identifier"] = zoom_levels - i
                 tile_matrix["TopLeftCorner"] = "0.0 0.0"
