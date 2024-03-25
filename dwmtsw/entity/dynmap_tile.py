@@ -1,5 +1,4 @@
 import requests
-from dwmtsw.entity.dynmap_configuration import DynmapConfiguration
 from dwmtsw.util.config_parser import DWMTSWConfigParser
 
 class DynmapTile:
@@ -15,16 +14,18 @@ class DynmapTile:
 
         config = DWMTSWConfigParser.get_config()
 
-        world_width = int(config["worlds"][self.__world + "_width"])
-        world_height = int(config["worlds"][self.__world + "_height"])
+        matrix_width = int(config['worlds'][self.__world + "_tiles_width"]) // (2 ** self.__zoom)
+        matrix_height = int(config['worlds'][self.__world + "_tiles_height"]) // (2 ** self.__zoom)
 
-        x = int(self.__x * 16 - world_width // 2)
-        y = - int(self.__y * 16 -  world_height // 2)
+        zoom_ratio = 2 ** self.__zoom
+
+        x = int(self.__x - matrix_width // 2) * zoom_ratio
+        y = int(self.__y - matrix_height // 2) * zoom_ratio
 
         zoom_string = ("z" * self.__zoom) + "_"
         if self.__zoom == 0:
             zoom_string = ""
         
-        query = f"{ self.__url }/tiles/{self.__world}/flat/0_0/{ zoom_string }{x}_{y}.jpg"
-        print(query)
+        query = f"{ self.__url }/tiles/{self.__world}/flat/0_0/{ zoom_string }{x}_{-y}.jpg"
+        DWMTSWConfigParser.log(f"Fetching {query}")
         return requests.get(query).content

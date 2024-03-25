@@ -11,22 +11,52 @@ app = Flask(__name__)
 
 @app.route("/")
 def index():
-    print("Index")
+    DWMTSWConfigParser.log("Index")
     url_for('static', filename='index.css')
     url_for('static', filename='map.png')
     return render_template('index.html')
 
+@app.route('/wmts')
+def wmts():
+
+    DWMTSWConfigParser.log("WMTS Main Request")
+    required_parameters = [
+        'request'
+    ]
+    request_args = {k.lower():v for k, v in request.args.items()}
+    required_parameters = {k:request_args[k] for k in required_parameters}
+    DWMTSWConfigParser.log("Provided parameters: " + str(request_args))
+
+    if required_parameters['request'] == "GetCapabilities":
+        DWMTSWConfigParser.log("GetCapabilities")
+        return Response(DynmapConfiguration.get_capabilities(url = config['DYNMAP']['url']), 
+                        mimetype="xml")
+
+    elif required_parameters['request'] == "GetTile":
+        integers = ["tilematrix", "tilecol", "tilerow"]
+        for i in integers:
+            request_args[i] = int(request_args[i])
+        
+        return send_file(
+            io.BytesIO(DynmapTile(url = config['DYNMAP']['url'],
+                                world = request_args["tilematrixset"],
+                                zoom = request_args["tilematrix"], 
+                                x = request_args["tilecol"],
+                                y = request_args["tilerow"]).get_tile()
+                    ),
+            mimetype='image/jpg')
+
 #http://opengeospatial.github.io/e-learning/wmts/text/operations.html
 @app.route('/GetCapabilities')
 def get_capabilities():
-    print("GetCapabilities")
+    DWMTSWConfigParser.log("GetCapabilities")
     return Response(DynmapConfiguration.get_capabilities(url = config['DYNMAP']['url']), 
                     mimetype="xml")
 
 # https://github.com/KhaledSharif/SimpleWMTS/blob/master/backend/api.py
 @app.route('/GetTile')
 def get_tile():
-    print("GetTile")
+    DWMTSWConfigParser.log("GetTile")
     required_parameters = [
         'tilematrixset',
         'tilematrix',
@@ -48,3 +78,6 @@ def get_tile():
                               y = required_parameters["tilerow"]).get_tile()
                    ),
         mimetype='image/jpg')
+
+if __name__ == "__main__":
+    app.run(threaded=False)
