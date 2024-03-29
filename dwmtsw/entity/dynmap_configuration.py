@@ -49,7 +49,7 @@ class DynmapConfiguration:
             DWMTSWConfigParser.log(zoom_levels)
 
             center_x = - int(config['worlds'][world["name"] + "_width"]) // 2
-            center_z = - int(config['worlds'][world["name"] + "_height"]) // 2
+            center_z = - int(config['worlds'][world["name"] + "_height"]) // 2 - 32
             center_z = -center_z
 
             tile_matrices = []
